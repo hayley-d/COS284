@@ -4,7 +4,7 @@
 
 section .data
     fmt db "%c", 0
-    user_req db "Enter plaintext to encrypt:", 0
+    user_req db "Enter plaintext to encrypt: ", 0
     hex_num dd 0x73113777
     result_message db "The cipher text is: ",0
 
@@ -30,13 +30,14 @@ encrypt_and_print:
     call get_plaintext
     call get_plaintext_input
     call encrypt_plaintext
+    call exit
     ret
 
 get_plaintext:
     mov rax, 4
     mov rbx, 1
     mov rcx, user_req
-    mov rdx, 25
+    mov rdx, 29
     int 0x80
     ret
 
@@ -69,7 +70,7 @@ encrypt_plaintext:
     jmp encryption_loop
 
 encryption_loop:    
-    mov al, [rsi]
+    mov al,byte [rsi]
     test al, al
     jz print_result	;if null terminate jump to the print func
 
@@ -105,4 +106,7 @@ print_result:
 
     ret
 
-
+exit:
+    mov rax, 1
+    xor rbx, rbx
+    int 0x80

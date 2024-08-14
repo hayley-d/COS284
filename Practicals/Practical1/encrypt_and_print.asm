@@ -7,6 +7,7 @@ section .data
     user_req db "Enter plaintext to encrypt: ", 0
     hex_num dd 0x73113777
     result_message db "The cipher text is: ",0
+    new_line_char db 0x0A
 
 section .bss
 	input_string resb 100	;reserve 100 bytes for the input string
@@ -30,7 +31,6 @@ encrypt_and_print:
     call get_plaintext
     call get_plaintext_input
     call encrypt_plaintext
-    call exit
     ret
 
 get_plaintext:
@@ -47,6 +47,12 @@ get_plaintext_input:
     mov rcx, input_string
     mov rdx, 100
     int 0x80
+    ;write to console
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, user_req
+    mov rdx, 29
+    int 0x80
     mov rsi, input_string	;move the string into the rsi
     ;get the end of the string
     call find_null_term
@@ -59,7 +65,7 @@ find_null_term:
     jmp find_null_term	;repeate until found \0
 
 append_newline:
-    mov byte[rsi], 0x0A	;append newline char
+    mov rsi,new_line_char 	;append newline char
     mov byte[rsi + 1], 0
     ret
 
@@ -74,11 +80,11 @@ encryption_loop:
     test al, al
     jz print_result	;if null terminate jump to the print func
 
-    cmp al, 0x0A	;compare to \n
+    cmp al, [new_line_char]	;compare to \n
     je skip_newline
 
     rol al, 4
-    xor al, byte [rax]
+    xor al,[hex_num]
     mov byte [rdi], al	;store in the encrypted_string
 
     ;go to the next character
@@ -98,15 +104,28 @@ print_result:
     mov rdx, 21
     int 0x80
 
-    mov rax, 4
+    ;get the length of the encryption string
+    mov rsi, encryption_string
+    call string_length
+
     mov rbx, 1
     mov rcx, encryption_string
-    mov rdx, 100
+    mov rdx, rax
+    mov rax, 4
     int 0x80
 
     ret
 
-exit:
-    mov rax, 1
-    xor rbx, rbx
-    int 0x80
+string_length:
+    xor rax, rax
+string_length_loop:
+    mov al, byte [rsi]
+    test al, al
+    jz string_length_done
+    inc rsi
+    inc rax
+    jmp string_length_loop
+string_length_done:
+    ret		;length in the rax
+
+

@@ -7,7 +7,7 @@ section .data
     text_1 db "Enter cipher text to decrypt: ",0
     text_2 db "The plaintext is: ",0
     new_line_char db 0x0A
-    hex_key db 0x73113777
+    hex_key equ 0x73113777
 
 section .bss
     ciphertext resb 200
@@ -63,18 +63,18 @@ decrypt_and_print:
     ret
 
 decrypt_cipher:
-    mov rsi, cihpertext
+    mov rsi, ciphertext
     mov rdi, plaintext
     call decrypt_loop
 
 decrypt_loop:
-    mov eax, byte[rsi]	;load byte from ciphertext
-    test eax,eax	;check if null term
+    mov al, byte[rsi]	;load byte from ciphertext
+    test al,al	;check if null term
     jz decrypt_end
 
-    xor eax, hex_key
-    ror eax, 4
-    mov byte[rdi], eax
+    xor al, hex_key
+    ror al, 4
+    mov byte[rdi], al
 
     inc rsi
     inc rdi

@@ -12,7 +12,7 @@ greeting:
     mov eax, 4	;sys call for a write
     mov ebx, 1	;1==stdout
     mov ecx, welcome_message
-    mov edx, 63
+    mov edx, 68
     int 0x80	;make sys call
 	
     ret                         ; return from function

@@ -1,6 +1,8 @@
 ; ==========================
 ; Group member 01: Hayley_Dodkins_u21528790
 ; ==========================
+section .data
+    choice_text db "Choice: ",0
 
 section .bss
 	user_input resb 1
@@ -14,9 +16,22 @@ get_user_choice:
     ; Call the greeting function to print the welcome message
     call greeting
     
-    mov eax, 3	;sys call for read
-    mov ebx, 0  ; 0==stdin
-    mov ecx, user_input
-    mov edx, 1
+    mov rax, 3	;sys call for read
+    mov rbx, 0  ; 0==stdin
+    mov rcx, user_input
+    mov rdx, 1
     int 0x80	;make call
+
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, choice_text
+    mov rdx, 9
+    int 0x80
+
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, user_input
+    mov rdx, 1
+    int 0x80
+    
     ret

@@ -68,10 +68,7 @@ encrypt_and_print:
 
     call encrypt_plaintext
 
-    mov rax,1
-    mov rbx,0
-    int 0x80
-    ret
+   ret
 
 encrypt_plaintext:
     mov rsi, input_string

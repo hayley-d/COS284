@@ -72,7 +72,7 @@ decrypt_loop:
     test al,al	;check if null term
     jz decrypt_end
 
-    xor al, hex_key
+    xor al, [hex_key]
     ror al, 4
     mov byte[rdi], al
 

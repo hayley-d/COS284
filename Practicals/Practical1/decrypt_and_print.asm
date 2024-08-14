@@ -1,15 +1,17 @@
 ; ==========================
-; Group member 01: Name_Surname_student-nr
-; Group member 02: Name_Surname_student-nr
-; Group member 03: Name_Surname_student-nr
+; Group member 01: Hayley_Dodkins_u21528790
 ; ==========================
 
 section .data
     fmt db "%c", 0
-    ; Do not modify anything above this line unless you know what you are doing
-    ; ==========================
-    ; Your data goes here
-    ; ==========================
+    text_1 db "Enter cipher text to decrypt: ",0
+    text_2 db "The plaintext is: ",0
+    new_line_char db 0x0A
+    hex_key db 0x73113777
+
+section .bss
+    ciphertext resb 200
+    plaintext resb 100
 
 section .text
 global decrypt_and_print
@@ -25,10 +27,59 @@ print_char_32:
     ret
 
 decrypt_and_print:
-    ; Do not modify anything above this line unless you know what you are doing
-    ; ==========================
-    ; Your code goes here
-    ; ==========================
-    ; Do not modify anything below this line unless you know what you are doing
+    ;prompt for cipher
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, text_1
+    mov rdx,30
+    int 0x80
 
+    ;read user input
+    mov rax, 3
+    mov rbx, 0
+    mov rcx, ciphertext
+    mov rdx, 200
+    int 0x80
+
+    call decrypt_cipher
+
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, text_2
+    mov rdx, 18
+    int 0x80
+
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, new_line_char
+    mov rdx, 2
+    int 0x80
+
+    mov rax, 4
+    mov rbx, 1
+    mov rcx, plaintext 
+    mov rdx, 100
+    int 0x80
+    ret
+
+decrypt_cipher:
+    mov rsi, cihpertext
+    mov rdi, plaintext
+    call decrypt_loop
+
+decrypt_loop:
+    mov eax, byte[rsi]	;load byte from ciphertext
+    test eax,eax	;check if null term
+    jz decrypt_end
+
+    xor eax, hex_key
+    ror eax, 4
+    mov byte[rdi], eax
+
+    inc rsi
+    inc rdi
+    jmp decrypt_loop
+
+decrypt_end:
+    mov byte [rdi], 0
     ret

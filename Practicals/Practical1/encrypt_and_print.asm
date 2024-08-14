@@ -5,13 +5,14 @@
 section .data
     fmt db "%c", 0
     user_req db "Enter plaintext to encrypt: ", 0
-    hex_num dd 0x73113777
+    hex_num equ 0x73113777
     result_message db "The cipher text is: ",0
     new_line_char db 0x0A
 
 section .bss
 	input_string resb 100	;reserve 100 bytes for the input string
 	encryption_string resb 100
+	input_length resq 1
 
 section .text
     global encrypt_and_print
@@ -27,46 +28,49 @@ print_char_32:
     ret
 
 encrypt_and_print:
-    ; ask the user for an input string
-    call get_plaintext
-    call get_plaintext_input
-    call encrypt_plaintext
-    ret
-
-get_plaintext:
+    ; Print input req string
     mov rax, 4
     mov rbx, 1
     mov rcx, user_req
     mov rdx, 29
     int 0x80
-    ret
 
-get_plaintext_input:
+    ; make sys in call
     mov rax, 3
     mov rbx, 0
     mov rcx, input_string
     mov rdx, 100
     int 0x80
-    ;write to console
-    mov rax, 4
-    mov rbx, 1
-    mov rcx, user_req
-    mov rdx, 29
+
+    mov [input_length],rax
+    mov byte[input_string + rax],0
+
+    ;print user input
+    mov rax,4
+    mov rbx,1
+    mov rcx,input_string
+    mov rdx,[input_length]
     int 0x80
-    mov rsi, input_string	;move the string into the rsi
-    ;get the end of the string
-    call find_null_term
 
-find_null_term:
-    mov al, [rsi]
-    cmp al, 0		;check if end of string
-    je append_newline	;if found append newline
-    inc rsi		;increment ptr
-    jmp find_null_term	;repeate until found \0
+    ;add new line char
+    mov rax,4
+    mov rbx,1
+    mov rcx,new_line_char
+    mov rdx,1
+    int 0x80
 
-append_newline:
-    mov rsi,new_line_char 	;append newline char
-    mov byte[rsi + 1], 0
+    ;print response message
+    mov rax,4
+    mov rbx,1
+    mov rcx,result_message
+    mov rdx,21
+    int 0x80
+
+    call encrypt_plaintext
+
+    mov rax,1
+    mov rbx,0
+    int 0x80
     ret
 
 encrypt_plaintext:
@@ -80,9 +84,6 @@ encryption_loop:
     test al, al
     jz print_result	;if null terminate jump to the print func
 
-    cmp al, [new_line_char]	;compare to \n
-    je skip_newline
-
     rol al, 4
     xor al,[hex_num]
     mov byte [rdi], al	;store in the encrypted_string
@@ -92,40 +93,14 @@ encryption_loop:
     inc rdi
     jmp encryption_loop
 
-skip_newline:
-    inc rsi
-    jmp encryption_loop
-
 print_result:
-    mov byte [rdi], 0 ;add null terminator
-    mov rax, 4	      ;sys write call
-    mov rbx, 1	      ; 1 == stdout
-    mov rcx, result_message
-    mov rdx, 21
-    int 0x80
-
-    ;get the length of the encryption string
-    mov rsi, encryption_string
-    call string_length
-
+    mov byte[rdi],0x00
+    ;print encrypted string
     mov rbx, 1
     mov rcx, encryption_string
-    mov rdx, rax
+    mov rdx, [input_string]
     mov rax, 4
     int 0x80
 
     ret
-
-string_length:
-    xor rax, rax
-string_length_loop:
-    mov al, byte [rsi]
-    test al, al
-    jz string_length_done
-    inc rsi
-    inc rax
-    jmp string_length_loop
-string_length_done:
-    ret		;length in the rax
-
 

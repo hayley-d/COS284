@@ -14,5 +14,5 @@ greeting:
     mov ecx, welcome_message
     mov edx, 68
     int 0x80	;make sys call
-	
-    ret                         ; return from function
+
+    ret

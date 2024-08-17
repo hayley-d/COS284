@@ -15,12 +15,6 @@ extern greeting
 get_user_choice:
     ; Call the greeting function to print the welcome message
     call greeting
-    
-    mov rax, 3	;sys call for read
-    mov rbx, 0  ; 0==stdin
-    mov rcx, user_input
-    mov rdx, 1
-    int 0x80	;make call
 
     mov rax, 4
     mov rbx, 1
@@ -28,10 +22,18 @@ get_user_choice:
     mov rdx, 9
     int 0x80
 
+   
+    mov rax, 3
+    mov rbx, 0
+    mov rcx, user_input
+    mov rdx, 1
+    int 0x80	
+
     mov rax, 4
     mov rbx, 1
     mov rcx, user_input
     mov rdx, 1
     int 0x80
     
+    mov rax, user_input
     ret

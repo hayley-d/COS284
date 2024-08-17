@@ -9,10 +9,11 @@ section .text
     global greeting
 
 greeting:
-    mov eax, 4	;sys call for a write
-    mov ebx, 1	;1==stdout
-    mov ecx, welcome_message
-    mov edx, 68
+    mov rax, 4	;sys call for a write
+    mov rbx, 1	;1==stdout
+    mov rcx, welcome_message
+    mov rdx, 68
     int 0x80	;make sys call
 
+    mov rax, 0
     ret

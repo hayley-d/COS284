@@ -3,7 +3,7 @@
 ; ==========================
 
 section .data
-    fmt db "%d", 0
+    fmt db "%d ", 0
     user_req db "Enter plaintext to encrypt: ", 0
     hex_key equ 0x73113777
     result_message db "The cipher text is: ",0
@@ -59,7 +59,7 @@ encrypt_and_print:
     mov rbx, input_string
     mov rcx, 4
     call encryption_loop
-
+   
     ret
 
 encryption_loop:    

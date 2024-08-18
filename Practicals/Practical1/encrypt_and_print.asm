@@ -10,7 +10,7 @@ section .data
     new_line_char db 0x0A
 
 section .bss
-	input_string resb 100	;reserve 100 bytes for the input string
+	input_string resb 4
 	encryption_string resb 100
 	input_length resq 1
 
@@ -28,20 +28,21 @@ print_char_32:
     ret
 
 encrypt_and_print:
-    ; Print input req string
+    ; Ask user for input
     mov rax, 4
     mov rbx, 1
     mov rcx, user_req
     mov rdx, 29
     int 0x80
 
-    ; make sys in call
+    ; get input string
     mov rax, 3
     mov rbx, 0
     mov rcx, input_string
-    mov rdx, 100
+    mov rdx, 4
     int 0x80
 
+    ; add null terminator
     mov [input_length],rax
     mov byte[input_string + rax],0
 
@@ -66,38 +67,35 @@ encrypt_and_print:
     mov rdx,21
     int 0x80
 
-    call encrypt_plaintext
+    ;call encrypt_plaintext
+    mov rcx, 0  ;length of input string
+;    mov rsi, input_string
+    xor rax,rax
+    mov rbx, 0x73113777
+    call encryption_loop
 
-   ret
-
-encrypt_plaintext:
-    mov rsi, input_string
-    mov rdi, encryption_string
-    mov rax, [hex_num]
-    jmp encryption_loop
+    ret
 
 encryption_loop:    
-    mov al,byte [rsi]
-    test al, al
+    ; move first char into al
+    mov al, byte[input_string+rcx]
+    ; check if null terminator
+    test al,al 
     jz print_result	;if null terminate jump to the print func
 
-    rol al, 4
-    xor al,[hex_num]
-    mov byte [rdi], al	;store in the encrypted_string
-
+    rol eax, 4
+    xor eax,ebx
+;    call print_char_32
+    mov rsi, rax
+    mov rdi, fmt
+    xor rax, rax
+    call printf
+ 
     ;go to the next character
-    inc rsi
-    inc rdi
+    inc rcx
     jmp encryption_loop
 
 print_result:
-    mov byte[rdi],0x00
-    ;print encrypted string
-    mov rbx, 1
-    mov rcx, encryption_string
-    mov rdx, [input_string]
-    mov rax, 4
-    int 0x80
-
+    mov rax, 0
     ret
 

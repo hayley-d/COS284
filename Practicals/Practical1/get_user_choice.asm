@@ -35,5 +35,5 @@ get_user_choice:
     mov rdx, 1
     int 0x80
     
-    mov rax, user_input
+    ;mov rax, [user_input]
     ret

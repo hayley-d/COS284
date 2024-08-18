@@ -50,16 +50,9 @@ encrypt_and_print:
     mov rax,4
     mov rbx,1
     mov rcx,input_string
-    mov rdx,[input_length]
+    mov rdx,4
     int 0x80
-
-    ;add new line char
-    mov rax,4
-    mov rbx,1
-    mov rcx,new_line_char
-    mov rdx,1
-    int 0x80
-
+    
     ;print response message
     mov rax,4
     mov rbx,1
@@ -67,35 +60,30 @@ encrypt_and_print:
     mov rdx,21
     int 0x80
 
-    ;call encrypt_plaintext
-    mov rcx, 0  ;length of input string
-;    mov rsi, input_string
+    mov ecx, 0  
     xor rax,rax
-    mov rbx, 0x73113777
     call encryption_loop
 
     ret
 
 encryption_loop:    
-    ; move first char into al
-    mov al, byte[input_string+rcx]
-    ; check if null terminator
+    movzx rax, byte[input_string+ecx]
     test al,al 
     jz print_result	;if null terminate jump to the print func
 
-    rol eax, 4
-    xor eax,ebx
-;    call print_char_32
+    rol rax, 4
+    xor rax,0x73113777
+
+    ; print char function
     mov rsi, rax
     mov rdi, fmt
     xor rax, rax
     call printf
  
     ;go to the next character
-    inc rcx
+    inc ecx
     jmp encryption_loop
 
 print_result:
-    mov rax, 0
     ret
 

@@ -10,7 +10,7 @@ section .data
     hex_key equ 0x73113777
 
 section .bss
-    ciphertext resb 4 
+    ciphertext resb 8 
     ;plaintext resb 4
 
 section .text
@@ -27,25 +27,33 @@ print_char_32:
     ret
 
 decrypt_and_print:
+    mov [ciphertext], edi
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, ciphertext 
+    mov edx, 8 
+    int 0x80 
+;
     mov rax, 4
     mov rbx, 1
     mov rcx, text_2
     mov rdx, 18
-    syscall
+    int 0x80 
 
     mov ecx, 0
-    mov eax, dword[edi]
+    mov eax, edi
     mov [ciphertext], eax
     mov ebx, 0x73113777
     xor rax, rax
-
+;
     call decrypt_loop
 
-    mov rax, 4
-    mov rbx, 1
-    mov rcx, new_line_char
-    mov rdx, 2
-    syscall
+;    mov rax, 4
+;    mov rbx, 1
+;    mov rcx, new_line_char
+;    mov rdx, 2
+;    int 0x80 
 
    ret
 

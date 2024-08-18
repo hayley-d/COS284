@@ -3,11 +3,12 @@
 ; ==========================
 
 section .data
-    fmt db "%c", 0
+    fmt db "%d", 0
     user_req db "Enter plaintext to encrypt: ", 0
     hex_key equ 0x73113777
     result_message db "The cipher text is: ",0
     new_line_char db 0x0A
+    space_char db 0x20
 
 section .bss
 	input_string resb 5
@@ -69,9 +70,9 @@ encryption_loop:
 
     rol rdx,4
     mov rax, rdx
-    xor rax, hex_key
+    xor eax, hex_key
 
-    ; print char function
+    
     mov rsi, rax
     mov rdi, fmt
     xor rax, rax

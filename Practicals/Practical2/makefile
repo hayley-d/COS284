@@ -1,5 +1,5 @@
-ASM_SOURCES := $(wildcard src/*.asm src/helpers/*.asm)
-C_TEST_SOURCES := $(wildcard test/*.c)
+ASM_SOURCES := $(wildcard *.asm)
+C_TEST_SOURCES := $(wildcard *.c)
 OBJ_DIR := obj
 BIN_DIR := bin
 EXECUTABLE := $(BIN_DIR)/test
@@ -25,7 +25,7 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 run: $(EXECUTABLE)
-	./$(EXECUTABLE)
+	@./$(EXECUTABLE)
 
 debug: $(EXECUTABLE)
 	gdb $(EXECUTABLE)

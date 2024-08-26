@@ -4,8 +4,9 @@
 ; Group member 03: Name_Surname_student-nr
 ; ==========================
 section .data
-result: db 0.0
+result: dd 0.0
 
+section .text
     global convertStringToFloat
 
 convertStringToFloat:
@@ -65,13 +66,17 @@ parse_int:
 
   .apply_sign:
       test r8b, r8b ;see if neg
-      jz .postive
-      subss result, xmm0  ;make negative
+      jz .positive
+      movss xmm3, [result]
+      subss xmm3, xmm0  ;make negative
+      movss [result], xmm3
       jmp .done
 
   .positive:
-      addss result, xmm0
+      movss xmm3, [result]
+      addss xmm3, xmm0
+      movss [result], xmm3
 
   .done:
-      ret
       
+ret

@@ -4,6 +4,7 @@
 ; Group member 03: Name_Surname_student-nr
 ; ==========================
 section .data
+double_sum: dq 0
 
 section .bss
   double_array resq 10  ;reserve space for 10 doubles
@@ -13,7 +14,7 @@ section .text
     global processArray
 
 processArray:
-    mov arr_size, byte[rsi] ;store size param
+    mov [arr_size], byte[rsi] ;store size param
     xor rcx, rcx  ;set counter to 0
     
     .while:
@@ -22,9 +23,24 @@ processArray:
         inc rcx ; ++i
         
         cmp rcx, [arr_size]
-        jnz .while
+        jl .while
     
-    movsd xmm0, double_array  ;store double array for return
-    ret
+    xor rcx, rcx  ; initinize i = 0
+    movzx r9, 1  ;initilize j = 1
+    .multiply_loop
+        cmp rcx, [arr_size];check rcx is within size
+        jge .end_multiply
+        
+        cmp r9, [arr_size] ;check rcx is within size
+        jge .end_multiply       
 
+        movsd xmm2, [double_array+rcx*8]
+        movsd xmm3, [double_array+r9*8]
+        
+        mulsd xmm2, xmm3          ;multiply double_array[i] * double_array[i+1]
+        addsd [double_sum], xmm2  ;add the result of the multiplication to the sum
+
+        inc rcx
+        inc r9  ;increment counter varaibles
+        jmp .multiply_loop
     

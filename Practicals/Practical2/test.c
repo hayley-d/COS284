@@ -14,8 +14,8 @@ int main() {
             printf("%f\n", floats[i]);
         }
 
-        double sum = processArray(floats, numFloats);
-        printf("The sum of the processed array is: %f\n", sum);
+       // double sum = processArray(floats, numFloats);
+       // printf("The sum of the processed array is: %f\n", sum);
 
         free(floats);
     }

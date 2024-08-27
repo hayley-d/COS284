@@ -1,46 +1,31 @@
 ; ==========================
-; Group member 01: Name_Surname_student-nr
-; Group member 02: Name_Surname_student-nr
-; Group member 03: Name_Surname_student-nr
+; Group member 01: Hayley Dodkins u21528790
 ; ==========================
 section .data
 double_sum: dq 0
-
-section .bss
-  double_array resq 10  ;reserve space for 10 doubles
-  arr_size resb 1 ;reseve 1 byte for size
+array_size: db 0
 
 section .text
     global processArray
 
 processArray:
-    mov [arr_size], byte[rsi] ;store size param
+    ;mov [array_size], byte[rsi] ;store size param
     xor rcx, rcx  ;set counter to 0
-    
+    xorps xmm3, xmm3 ; set the sum to 0
     .while:
-        cvtss2sd xmm1, [xmm0 + rcx * 4] ;store floatArr[i] as double in xmm1
-        movsd [double_array+rcx*8], xmm1  ;store the double in the double array
+        cmp rcx, rsi
+        jge .end_loop
+        cvtss2sd xmm1, dword [rdi + rcx * 4] ;store floatArr[i] as double in xmm1
+        inc rcx ; ++i
+        cvtss2sd xmm2, [rdi + rcx * 4] ; store floatArr[i+1] in xmm2
+        mulsd xmm1, xmm2  ; multiply float 1 with float 2
+        addsd xmm3, xmm1  ; add to the total sum
+        
         inc rcx ; ++i
         
-        cmp rcx, [arr_size]
-        jl .while
+        jmp .while
     
-    xor rcx, rcx  ; initinize i = 0
-    movzx r9, 1  ;initilize j = 1
-    .multiply_loop
-        cmp rcx, [arr_size];check rcx is within size
-        jge .end_multiply
-        
-        cmp r9, [arr_size] ;check rcx is within size
-        jge .end_multiply       
+    .end_loop:
 
-        movsd xmm2, [double_array+rcx*8]
-        movsd xmm3, [double_array+r9*8]
-        
-        mulsd xmm2, xmm3          ;multiply double_array[i] * double_array[i+1]
-        addsd [double_sum], xmm2  ;add the result of the multiplication to the sum
-
-        inc rcx
-        inc r9  ;increment counter varaibles
-        jmp .multiply_loop
-    
+    movsd xmm0, xmm3  ;move into xmm0 for return
+    ret

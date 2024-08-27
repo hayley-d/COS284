@@ -1,10 +1,9 @@
 ; ==========================
-; Group member 01: Name_Surname_student-nr
-; Group member 02: Name_Surname_student-nr
-; Group member 03: Name_Surname_student-nr
+; Group member 01: Hayley Dodkins u21528790
 ; ==========================
 section .data
 prompt: db "Enter values seporated by whitespace and enclosed in pipes (|): ",0
+arr_index: db 0
 
 section .bss
   input resb 64 ;reseve space for a 64 byte input
@@ -30,10 +29,12 @@ extractAndConvertFloats:
   mov rbx, 0
   mov rcx, input
   mov rdx, 100
+  int 0x80
 
   ;rax has number of bytes read?
   mov byte[input+rax], 0  ;add null terminate to the string
 
+  ;clear registers for operations
   xor rax, rax
   xor rbx, rbx
   xor rcx, rcx
@@ -42,8 +43,8 @@ extractAndConvertFloats:
   mov r9, 0 ; index for float array
 
   .do_while:
-      mov al, byte[input+rcx]
-      cmp al, 0  ;make sure not end of string
+      mov al, byte[input+rcx] ;move char into al
+      cmp al, '|'  ;make sure not end of string
       jz .end_do_while
       mov byte[rdi + r8], al ; load char into rdi
       inc r8    ; incrmenent counter for rdi offset
@@ -54,14 +55,17 @@ extractAndConvertFloats:
 
       ; if next char is a ' '
       ;rdi should contain substring
+      mov byte[arr_index],cl 
       call convertStringToFloat     ; call to convert str into float
-      movss [float_array + r9], xmm0 ;store float in the float array  
+      xor rcx, rcx
+      movzx rcx, byte[arr_index]
+      movss [float_array + r9*4], xmm0 ;store float in the float array  
       inc r9  ;incement the index
       inc rcx ; go to next char
       jmp .do_while
 
   .end_do_while:
-      movss xmm0, [float_array] ;return float array in xmm0
+      mov rax, float_array ;return float array in xmm0
 
-  leave
-  ret
+ leave
+ ret

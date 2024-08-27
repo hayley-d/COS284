@@ -1,7 +1,5 @@
 ; ==========================
-; Group member 01: Name_Surname_student-nr
-; Group member 02: Name_Surname_student-nr
-; Group member 03: Name_Surname_student-nr
+; Group member 01: Hayley Dodkins u21528790
 ; ==========================
 section .data
 result: dd 0.0
@@ -67,7 +65,7 @@ parse_int:
   .apply_sign:
       test r8b, r8b ;see if neg
       jz .positive
-      movss xmm3, [result]
+      xorps xmm3, xmm3
       subss xmm3, xmm0  ;make negative
       movss [result], xmm3
       jmp .done

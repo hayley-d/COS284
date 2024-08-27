@@ -6,7 +6,7 @@ extern double processArray(float *arr, int size);
 
 int main() {
     int numFloats;
-    float *floats = extractAndConvertFloats(&numFloats);
+    float *floats  = extractAndConvertFloats(&numFloats);
 
     if (floats != NULL) {
         printf("Converted numbers:\n");
@@ -14,8 +14,8 @@ int main() {
             printf("%f\n", floats[i]);
         }
 
-       // double sum = processArray(floats, numFloats);
-       // printf("The sum of the processed array is: %f\n", sum);
+        double sum = processArray(floats, numFloats);
+        printf("The sum of the processed array is: %f\n", sum);
 
         free(floats);
     }

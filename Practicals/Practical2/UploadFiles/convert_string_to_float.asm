@@ -61,7 +61,6 @@ parse_int:
       cvtsi2sd xmm4, rcx
       movsd xmm5, [zero]
       ucomisd xmm4, xmm5
-      ;cmp rcx, 0 ;check if decimal part is 0
       je .store_result;.positive
       cvtsi2ss xmm1, rbx  ;convert fractional part into float
       cvtsi2ss xmm2, rcx  ;convert fractional divide
@@ -75,17 +74,7 @@ parse_int:
       movss xmm1, [neg_one]
       mulss xmm0, xmm1
       mov [sign], byte 0
-      ;movss [result], xmm0
-      ;movss xmm3, [result]
-      ;movss xmm4 ,[neg_one]
-      ;subss xmm3,xmm4
-      ;movss [result], xmm3
-      ;jmp .done
 
-  ;.positive:
-   ;   movss xmm3, [result]
-  ;    addss xmm3, xmm0
-   ;   movss [result], xmm3
 
    .store_result
         movss [result], xmm0

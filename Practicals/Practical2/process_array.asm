@@ -20,12 +20,13 @@ processArray:
         cvtss2sd xmm2, [rdi + rcx * 4] ; store floatArr[i+1] in xmm2
         mulsd xmm1, xmm2  ; multiply float 1 with float 2
         addsd xmm3, xmm1  ; add to the total sum
-        
+
         inc rcx ; ++i
-        
+
         jmp .while
-    
+
     .end_loop:
 
     movsd xmm0, xmm3  ;move into xmm0 for return
+    cvtss2si rax, xmm0
     ret

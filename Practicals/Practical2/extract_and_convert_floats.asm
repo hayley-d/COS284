@@ -1,16 +1,20 @@
 ; ==========================
-; Group member 01: Hayley Dodkins u21528790
+; Group member 01: Hayley Dodkins 21528790
 ; ==========================
 section .data
 prompt: db "Enter values seporated by whitespace and enclosed in pipes (|): ",0
-arr_index: db 0
+float_array dq  0    ;holds the pointer to the float array
+counter dd 0    ;counter for offset
+offset dd 0
+c db ''
 
 section .bss
-  input resb 64 ;reseve space for a 64 byte input
-  float_array resd 10 ;reserve space for 10 floats
+input resb  100
+current resb 100 ;reserve space for a 10 digit number
 
 section .text
   extern convertStringToFloat
+  extern malloc
   global extractAndConvertFloats
 
 extractAndConvertFloats:
@@ -34,38 +38,59 @@ extractAndConvertFloats:
   ;rax has number of bytes read?
   mov byte[input+rax], 0  ;add null terminate to the string
 
-  ;clear registers for operations
+  mov rdi, 4    ;size of 1 float
+  imul rdi, 15  ; number of floats to store
+  call malloc
+  mov [float_array], rax    ;store address in float array
+
   xor rax, rax
   xor rbx, rbx
   xor rcx, rcx
-  mov rcx, 2  ;first char is '|' second char is a ' '
-  mov r8, 0 ; index for rdi
-  mov r9, 0 ; index for float array
+  xor r8,r8
+  mov rcx,2
+  xor r14,r14   ;counter for float offset
+  
 
-  .do_while:
-      mov al, byte[input+rcx] ;move char into al
-      cmp al, '|'  ;make sure not end of string
-      jz .end_do_while
-      mov byte[rdi + r8], al ; load char into rdi
-      inc r8    ; incrmenent counter for rdi offset
-      inc rcx   ; go to next char in the input
-      mov al, byte[input+rcx] ;move char into al
-      cmp al, ' '   ;see if end of substring
-      jnz .do_while
+  jmp parse_loop
 
-      ; if next char is a ' '
-      ;rdi should contain substring
-      mov byte[arr_index],cl 
-      call convertStringToFloat     ; call to convert str into float
-      xor rcx, rcx
-      movzx rcx, byte[arr_index]
-      movss [float_array + r9*4], xmm0 ;store float in the float array  
-      inc r9  ;incement the index
-      inc rcx ; go to next char
-      jmp .do_while
+  leave
+  ret
 
-  .end_do_while:
-      mov rax, float_array ;return float array in xmm0
+parse_loop:
 
- leave
- ret
+    ;.find_next_delimiter:
+        mov al, byte[input+rcx]
+        cmp al,' '  ;check for delimiter
+        je .delimiter_found
+        cmp al,'|'  ;check for delimiter
+        je .done_parsing
+
+        mov [current + r8], al ;move the character into the temp string
+        inc r8
+        inc rcx
+        jmp parse_loop;.find_next_delimiter
+
+    .delimiter_found:
+        mov byte[current+r8], 0  ;null terminate string
+        mov rdi, current
+        inc rcx ;move past the delimiter
+        mov dword[counter], ecx  ;store value for function call
+        call convertStringToFloat
+
+        xor r8,r8
+        xor al,al
+        xor rcx, rcx    ;clear the counter register
+
+        mov r14d, dword[offset]
+        mov [float_array + r14*4],rax   ;move return into the array
+        inc r14 ; increment the counter
+        mov dword[offset], r14d
+        mov rcx, [counter]  ;restore the counter
+        jmp parse_loop;.find_next_delimiter
+
+    .done_parsing:
+        mov rax, float_array
+
+
+
+

@@ -17,6 +17,8 @@ processArray:
         jge .end_loop
         cvtss2sd xmm1, dword [rdi + rcx * 4] ;store floatArr[i] as double in xmm1
         inc rcx ; ++i
+        cmp rcx, rsi
+        jge .add_last
         cvtss2sd xmm2, dword [rdi + rcx * 4] ; store floatArr[i+1] in xmm2
         mulsd xmm1, xmm2  ; multiply float 1 with float 2
         addsd xmm3, xmm1  ; add to the total sum
@@ -25,6 +27,8 @@ processArray:
 
         jmp .while
 
+    .add_last:
+        addsd xmm3, xmm1
     .end_loop:
 
     movsd xmm0, xmm3  ;move into xmm0 for return

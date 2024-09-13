@@ -3,18 +3,40 @@
 ; Group member 02: Name_Surname_student-nr
 ; Group member 03: Name_Surname_student-nr
 ; ==========================
-segment .data
-rows dd 0 ; number of rows in the matrix
-cols dd 0 ;number of columns in the matrix
-matrix dq 0 ; holds the first address of the matrix
-num dd 0 ;holds the value of the scalar
-
 segment .text
         global multiplyScalarToMatrix
         
 multiplyScalarToMatrix:
-  ;get the parameters
-  mov [matrix], rdi ; store address of matrix
-  mov [num], rsi ;get the scalar value
-  mov [rows], rdx ;get the rows (param3)
-  mov [cols], rcx ;get the cols (param4)
+  ; float** return = rax 
+  ; in_matrix = rdi
+  ; in_scalar = xmm0 
+  ; rows = rsi
+  ; cols = rdx
+
+  ;push rdi
+  ;push rsi
+  ;sub rsp, 16
+  ;movdqu [rsp], xmm1
+
+  ;check if row/cols is 0
+  cmp rsi, 0
+  je .end
+  cmp rdx, 0
+  je .end
+
+  imul rsi, rdx  ;multiply row*cols to get the total number of elements in the array
+
+  .loop:
+    movsd xmm1, [rdi] ;grab elemnt from the matrix
+    mulsd xmm1, xmm0 ; multiply by the scalar value
+    movsd [rdi], xmm1 ;store back into the matrix
+    add rdi, 4 ; increment to next index
+    dec rsi
+    jnz .loop
+
+  .end:
+    ;movdqu xmm1, [rsp]
+    ;add rsp, 16
+    ;pop rsi
+    ;pop rdi
+    ret

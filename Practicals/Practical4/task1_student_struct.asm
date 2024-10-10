@@ -8,8 +8,7 @@ in_name dq 0;
 in_gpa dd 0;
 struc Student
     .id:  resd 1 ; 32-bit student id -- 4 bytes
-    .name: resb 64 ;64-bit name -- 16 bytes
-    align 8 
+    .name: resb 64  ;64-bit name -- 16 bytes
     .gpa: resd 1  ;32-bit gpa
     align 8 
 endstruc
@@ -27,6 +26,7 @@ sub rsp, 64
 mov [rsp + 0], rdi
 mov [rsp + 4], rsi
 movss [rsp + 12], xmm0
+movss [in_gpa], xmm0
 xor rdi, rdi
 mov rdi, Student_size 
 call malloc
@@ -37,7 +37,8 @@ lea rdi, qword[rax + Student.name]
 mov rsi, qword[rsp + 4]
 call strcpy
 mov rax, [s]
-movss xmm0, [rsp + 12]
+movss xmm0, [in_gpa]
+mov rcx, Student.gpa
 movss [rax + Student.gpa], xmm0
 mov rax, [s]
 leave

@@ -28,9 +28,9 @@ int main() {
     struct Pixel* p = createPixel(255,128,64,NULL,NULL,NULL,NULL);
 
     // Access and print the pixel data from the allocated structure
-    printf("Pixel ID: %c\n", p->red); 
-    printf("Student Name: %c\n", p->green);
-    printf("Student GPA: %c\n", p->blue);
+    printf("red: %u\n", p->red); 
+    printf("green: %u\n", p->green);
+    printf("blue: %u\n", p->blue);
     printf("CDF Value: %u\n", p->cdfValue);
     free(p);
 

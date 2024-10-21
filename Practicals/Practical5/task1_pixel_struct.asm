@@ -46,7 +46,7 @@ mov [p], rax    ;save the pointer
 mov bl, byte[rsp + 0]                  ; Retrieve value for red
 mov [rax + Pixel.red], bl              ; Store the value for red
 mov bl, byte[rsp + 1]                  ; Retrieve value for green
-mov [rax + Pixel.red], bl              ; Store the value for green 
+mov [rax + Pixel.green], bl              ; Store the value for green 
 mov bl, byte[rsp + 2]                  ; Retrieve value for blue
 mov [rax + Pixel.blue], bl             ; Store the value for blue
 

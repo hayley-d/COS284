@@ -6,17 +6,15 @@ struc Pixel
     .green: resb 1  
     .blue: resb 1
     .cdfValue: resb 1   ; Reserve 1 byte for char
-    align 8
+    align 8 
     .up: resq 1         ; Reserve 1 qword for ptr
     .down: resq 1       ; Reserve 1 qword for ptr
     .left: resq 1       ; Reserve 1 qword for ptr
     .right: resq 1      ; Reserve 1 qword for ptr
-    align 8 
 endstruc
 
 p   dq  0               ; Temp variable to hold the new allocated memory
 
-extern strcpy
 extern malloc
 section .text
     global  createPixel 
@@ -37,6 +35,7 @@ mov [rsp + 19], r9      ; Store r9 = left
 mov [rsp + 27], r11     ; Store r11 = right
 
 ; Allocate memory for the struct
+mov r15, Pixel_size
 xor rdi, rdi
 mov rdi, Pixel_size 
 call malloc
@@ -52,15 +51,16 @@ mov [rax + Pixel.blue], bl             ; Store the value for blue
 
 mov bl, 0
 mov [rax + Pixel.cdfValue], bl         ; Inital value for cdf value os 0
+xor rbx, rbx
 
 mov rbx, qword[rsp + 3]                 ; Retrieve ptr for up 
-mov [rax + Pixel.up], rbx               ; Store the address for up 
+mov [rax + 8], rbx               ; Store the address for up 
 mov rbx, qword[rsp + 11]                ; Retrieve ptr for down 
-mov [rax + Pixel.down], rbx             ; Store the address for down 
+mov [rax + 16], rbx             ; Store the address for down 
 mov rbx, qword[rsp + 19]                ; Retrieve ptr for left
-mov [rax + Pixel.left], ebx             ; Store the address for left
+mov [rax + 24], rbx             ; Store the address for left
 mov rbx, qword[rsp + 27]                ; Retrieve ptr for right 
-mov [rax + Pixel.right], ebx            ; Store the address for right 
+mov [rax + 32], rbx            ; Store the address for right 
 mov rax, [p]                            ; Move ptr to the struct into rax
 leave
 ret

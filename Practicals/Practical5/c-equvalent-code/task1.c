@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
 
 // Structure of a pixel
 typedef struct PixelNode {
@@ -50,7 +50,6 @@ PixelNode* createNode(unsigned char r, unsigned char g, unsigned char b){
     // exit the program if the allocation fails
     if(!newPixel){
         printf("Memory allocation failed\n");
-        exit(1);
     }
 
     // Set the values
@@ -109,41 +108,45 @@ PixelNode*** readPPMImage(const char* file_name,int* width,int* height){
     // Exit the program if the file is not opended
     if(!file){
         printf("Failed to open file\n");
+        fclose(file);
         exit(1);
     } else {
         printf("File has been opened\n");
     }
 
-    int max_colour_value;
     char format[3];
 
-    skip_comments(file);
-
-    // Read and verify the PPM magic number (should be P6)
-    fscanf(file,"2%s",format);
-    /*if(format[0] != 'P' || format[1] != '6'){
-        printf("Not a valid P6 PPM file\n");
-        fclose(file);
-        exit(1);
-    }*/
-
-    skip_comments(file);
+    // read format
+    fscanf(file,"%2s",format);
 
     // Read image width, height and maximum colour value while skipping any comment lines
-    fscanf(file, "%d", width);
-    skip_comments(file);
+    fscanf(file, "%d %d", width,height);
+    if(*width > 1281) {
+        printf("Width is the wrong size ");
+        printf("%d\n",*width);
+        fclose(file);
+        exit(1);
+    }
 
-    fscanf(file, "%d", height);
-    skip_comments(file);
-
+    int max_colour_value;
     fscanf(file,"%d",&max_colour_value);
-    skip_comments(file);
+    //skip_comments(file);
+
+    printf("Finished reading the header\n");
+    printf("Width: %d\t",*width);
+    printf("Height: %d\n",*height);
 
     //skip new line after the header
     fgetc(file); 
 
     // Allocate memory for the 2D array of PixelNode pointers
     PixelNode*** image = (PixelNode***) malloc((*height) * sizeof(PixelNode**));
+    if(image == NULL) {
+        printf("Memory allocation failed\n");
+        fclose(file);
+        exit(1);
+    }
+
     for(int i = 0; i < *height; i++){
         image[i] = (PixelNode**) malloc((*width) * sizeof(PixelNode*));
     }
@@ -168,6 +171,8 @@ PixelNode*** readPPMImage(const char* file_name,int* width,int* height){
             }
         }
     }
+
+    printf("Finished parsing\n");
 
     // fill in right and down references
     for(int row = 0; row < *height; row++){
@@ -216,7 +221,8 @@ int main() {
 
     // Read the PPM image and construct the 2D linked list of PixelNodes
     PixelNode*** image = readPPMImage(filename, &width, &height);
-
+    
+    printf("Finished construction\n");
 
     // Free the memory used by the image
     free_image(image, width, height);

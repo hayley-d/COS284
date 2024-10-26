@@ -251,64 +251,136 @@ leave
 ret
 
 create_list:
-    ; File is open and height, width and max should be stored.
+    ; Assuming File is open and file, height, width and max should be stored.
     ; Set up stack frame
     push rbp                
     mov rbp, rsp
-    sub rsp, 64                         ; Reserve 64 bytes
+    sub rsp, 64                                     ; Reserve 64 bytes
 
     ; Allocate memory for list
-    xor rdi, rdi                        ; Make sure rdi is clear
-    mov rdi, dword[height]              ; Load height into rdi
-    imul rdi, 8                         ; Multiply height by 8 (Size of a pointer in bytes)
+    xor rdi, rdi                                    ; Make sure rdi is clear
+    mov rdi, dword[height]                          ; Load height into rdi
+    imul rdi, 8                                     ; Multiply height by 8 (Size of a pointer in bytes)
     call malloc
-    mov [list], rax                     ; Store the pointer to the list
+    mov [list], rax                                 ; Store the pointer to the list
 
     ; Allocate memory for each row
-    xor ecx, ecx                        ; Initialize counter to 0
+    xor rcx, rcx                                    ; Initialize counter to 0
     .loop:
-        cmp ecx, dword[height]          ; Check if in bounds
-        je .end_loop                    ; If not in bounds end the loop
-        xor rdi, rid                    ; Clear the rdi
-        mov rdi, dword[width]           ; Load the width into rdi
-        imul rdi, 8                     ; Multiply by 8 (Size of a pointer in bytes)
+        cmp ecx, dword[height]                      ; Check if in bounds
+        je .end_loop                                ; If not in bounds end the loop
+        xor rdi, rid                                ; Clear the rdi
+        movzx rdi, dword[width]                     ; Load the width into rdi
+        imul rdi, 8                                 ; Multiply by 8 (Size of a pointer in bytes)
         call malloc
-        mov [list + ecx * 8], rax       ; Store the pointer in the correct row
-        inc ecx                         ; Increment counter
-        jmp .loop                       ; Repeate loop
+        mov [list + ecx * 8], rax                   ; Store the pointer in the correct row
+        inc rcx                                     ; Increment counter
+        jmp .loop                                   ; Repeate loop
     .end_loop:
 
     ; Loop through rows
-    xor ecx, ecx                        ; Clear rcx register
+    xor rcx, rcx                                    ; Clear rcx register
     .loop_rows:
-        cmp ecx, dword[height]          ; Compare counter to height
-        je .end_loop_rows               ; End loop if out of bounds
-        xor e14, e14                    ; Clear e14 (used as counter for second loop)
+        cmp ecx, dword[height]                      ; Compare counter to height
+        je .end_loop_rows                           ; End loop if out of bounds
+        xor r14, r14                                ; Clear e14 (used as counter for second loop)
         .loop_columns:
-            cmp e14,[width]             ; Cpmapre counter to width
-            je .end_loop_columns        ; End loop if out of bounds
-            ;Pocesss
-            inc e14                     ; Increment counter (inner loop)
-            jmp .loop_columns           ; Repeate loop columns
+            cmp e14, dword[width]                   ; Cpmapre counter to width
+            je .end_loop_columns                    ; End loop if out of bounds
+
+            mov [rsp + 0], rcx                      ; Store ecx to keep constant through function call
+            mov [rsp + 4], r14                      ; Store e14 to keep constant through function call
+
+            ; Get Red
+            mov rdi, qword[file]                    ; Load the file pointer into rdi
+            call fgetc
+            cmp rax, -1                             ; Test is EOF
+            je .end_loop_rows                       ; Stop the loop
+            mov [rsp + 8], rax                      ; Store red value on stack
+
+            ; Get green
+            mov rdi, qword[file]                    ; Load file into rdi
+            call fgetc
+            cmp rax, -1
+            je .end_loop_rows
+            mov [rsp + 9], rax                      ; Store green
+
+            ; Get blue
+            mov rdi, qword[file]                    ; Load file into rdi
+            call fgetc
+            cmp rax, -1
+            je .end_loop_rows
+            mov [rsp + 10], rax                     ; Store blue 
+
+            ; Create Pixel
+            movzx rdi, [rsp + 8]                    ; Load Red into rdi for fuction call
+            movzx rsi, [rsp + 9]                    ; Load Green into rsi
+            movzx rdx, [rsp + 10]                   ; Load Blue into rdx
+            mov rcx, 0                              ; Up ptr is NULL
+            mov r8, 0                               ; Down ptr is NULL
+            mov r9, 0                               ; Left ptr is NULL
+            mov r11, 0                              ; Right ptr is NULL
+            call createPixel
+            movzx r14, [rsp + 4]                    ; Load r14 from stack
+            movzx rcx, [rsp + 0]                    ; Load rcx from stack
+            mov rbx, qword[list]
+            mov rdi, qword[rbx + rcx * 8]           ; Load row
+            mov [rdi + r14 * 8], rax                ; Store ptr to pixel
+
+            ; Create Refrences
+            test rcx, rcx                           ; If row > 0
+            jz .no_up_ref
+            mov rdi, [list]
+            mov rdi, [rdi + rcx * 8 - 8]            ; list[row-1]
+            mov rdi, [rdi + r14 * 8]                ; list[row-1][col]
+            mov [rax + 8], rdi                      ; Store up pointer
+            .no_up_ref:
+
+            test r14, r14                           ; If col > 0
+            jz .no_left_ref
+            mov rdi, [list]
+            mov rdi, [rdi + rcx * 8]                ; list[row]
+            mov rdi, [rdi + r14 * 8 - 8]            ; list[row][col-1]
+            mov [rax + 24], rdi                     ; Set left ptr             
+            .no_left_ref:
+
+            inc r14                                 ; Increment counter (inner loop)
+            jmp .loop_columns                       ; Repeate loop columns
         .end_loop_columns:
-        inc ecx                         ; Increment counter (outer loop)
+        inc rcx                                     ; Increment counter (outer loop)
         jmp .loop_rows
     .end_loop_rows:
 
     ; Fill in the right and down references
-    xor ecx, ecx                        ; Clear outer loop counter
+    xor rcx, rcx                                    ; Clear outer loop counter
     .loop_ref_rows:
-        cmp ecx, dword[height]          ; Check if in bounds
+        cmp ecx, dword[height]                      ; Check if in bounds
         je .end_loop_ref_rows
-        xor e14, e14                    ; Clear inner loop counter
+        xor r14, r14                                ; Clear inner loop counter
         .loop_ref_columns:
-            cmp e14, dword[width]       ; Check if in bounds
+            cmp e14, dword[width]                   ; Check if in bounds
             je .end_loop_ref_columns
-            ; Porcessing
-            inc e14                     ; Increment inner counter
+            
+            mov rax, qword[list]                    ; Load the list
+            mov rbx, [rax + rcx * 8]                ; Load list[row]
+            mov rdx, [rbx + r14 * 8]                ; Load list[row][col]
+            
+            cmp r14, [width]-1
+            je .no_right_link
+            mov rsi, [rbx + r14 * 8 + 8]            ; Load list[row][col+1]
+            mov [rdx + 32], rsi                     ; Set Right refrence
+            .no_right_link:
+            
+            cmp rcx, [height]-1                     
+            je .no_down_link
+            mov rsi, [rax + rcx * 8 + 8]            ; Load list[row+1]
+            mov [rdx + 16], rsi                     ; Set down pointer
+            .no_down_link:
+            
+            inc r14                                 ; Increment inner counter
             jmp .loop_ref_columns
         .end_loop_ref_columns:
-        inc ecx                         ; Increment outer counter
+        inc rcx                                     ; Increment outer counter
         jmp .loop_ref_rows
     .end_loop_ref_rows:
     ; Finished processing

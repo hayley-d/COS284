@@ -292,21 +292,21 @@ create_list:
             mov [rsp + 4], r14                      ; Store e14 to keep constant through function call
 
             ; Get Red
-            mov rdi, qword[file]                    ; Load the file pointer into rdi
+            movzx rdi, dword[fileDescriptor]        ; Load the file pointer into rdi
             call fgetc
             cmp rax, -1                             ; Test is EOF
             je .end_loop_rows                       ; Stop the loop
             mov [rsp + 8], rax                      ; Store red value on stack
 
             ; Get green
-            mov rdi, qword[file]                    ; Load file into rdi
+            movzx rdi, dword[fileDescriptor]        ; Load file into rdi
             call fgetc
             cmp rax, -1
             je .end_loop_rows
             mov [rsp + 9], rax                      ; Store green
 
             ; Get blue
-            mov rdi, qword[file]                    ; Load file into rdi
+            movzx rdi, dword[fileDescriptor]        ; Load file into rdi
             call fgetc
             cmp rax, -1
             je .end_loop_rows

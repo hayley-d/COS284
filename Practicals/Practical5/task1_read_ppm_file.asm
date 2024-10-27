@@ -32,8 +32,15 @@ list dq 0                               ; Pointer for the list
 red db 0
 green db 0
 blue db 0
-outerCounter dd 0
+
+; New variables
 innerCounter dd 0
+outerCounter dd 0
+rowHeads dq 0
+head dq 0
+prevRow dq 0
+prev dq 0
+node dq 0
 
 extern createPixel
 extern malloc
@@ -339,12 +346,7 @@ readPPM:
     ; Linked List creation
 
     jmp create_list
-    ; Close file
-    mov rdi , [fileDescriptor]          ; Mov the file descriptor     
-    call close                          ; Close file
-
     
-    ret
 
 .nullReturn:
     mov rdi , [fileDescriptor]          ; Mov the file descriptor     
@@ -364,182 +366,118 @@ create_list:
     ; Allocate memory for list
     xor rdi, rdi                                    ; Make sure rdi is clear
     mov edi, dword[height]                          ; Load height into rdi
-    imul edi, 8                                     ; Multiply height by 8 (Size of a pointer in bytes)
+    imul edi, 8                                    
     call malloc
-    mov [list], rax                                 ; Store the pointer to the list
+    mov [rowHeads], rax                             ; Store the pointer 
+    mov [head], rax
 
-    ; Allocate memory for each row
-    xor rcx, rcx                                    ; Initialize counter to 0
-    .loop:
-        cmp ecx, [height]                           ; Check if in bounds
-        je .end_loop                                ; If not in bounds end the loop
-        xor rdi, rdi                                ; Clear the rdi
-        mov edi, [width]                            ; Load the width into rdi
-        imul edi, 8                                 ; Multiply by 8 (Size of a pointer in bytes)
-        mov [outerCounter], rcx                     ; Store counter for function call
-        call malloc
-        mov rcx, [outerCounter]                     ; Restore counter
-        mov [list + rcx * 8], rax                   ; Store the pointer in the correct row
-        inc rcx                                     ; Increment counter
-        jmp .loop                                   ; Repeate loop
-    .end_loop:
+    xor rcx, rcx
+    .while_loop_1:
+        ;xor rdi, rdi
+        ;mov edi, [height]
+        cmp ecx,[height];edi
+        jge .end_while_loop_1
 
-    ; Loop through rows
-    xor rcx, rcx                                    ; Clear rcx register
-    .loop_rows:
-        mov r12d, dword[height]
-        cmp ecx, r12d                               ; Compare counter to height
-        jge .end_loop_rows                          ; End loop if out of bounds
+        xor r15, r15
+        mov [prev], r15                               ; prev = NULL 
 
-        xor r14, r14                                ; Clear e14 (used as counter for second loop)
-        xor r12, r12
-        .loop_columns:
-            mov r12d, dword[width]
-            cmp r14d, r12d                          ; Compare counter to width
-            jge .end_loop_columns                   ; End loop if out of bounds
+        xor r14, r14
+        .while_loop_2:
+            
+            mov [outerCounter], ecx
+            mov [innerCounter], r14d
 
-            mov [outerCounter], ecx                 ; Store ecx to keep constant through function call
-            mov [innerCounter], r14d                ; Store e14 to keep constant through function call
+            ;xor rdi, rdi
+            ;mov edi, [width]
+            cmp r14d,[width];edi
+            jge .end_while_loop_2
 
-            xor rdi, rdi
-            xor rax, rax
-            xor rsi, rsi
-            xor rdx, rdx
-
-            ; Get Red
-            mov rax, 0                              ; system call for read
-            mov edi, [fileDescriptor]               
-            lea rsi, [red]                          ; Store red
-            mov rdx, 1                              ; Read one byte
-            syscall
-
-            ; Get green
-            xor rdi, rdi
-            mov rax, 0                              ; system call for read
-            mov edi, [fileDescriptor]               
-            lea rsi, [green]                        ; Store green
-            mov rdx, 1                              ; Read one byte
-            syscall
-
-
-            ; Get blue
-            xor rdi, rdi
-            mov rax, 0                              ; system call for read
-            mov edi, [fileDescriptor]               
-            lea rsi, [blue]                         ; Store blue
-            mov rdx, 1                              ; Read one byte
-            syscall
-
-            ; Allocate memory for the struct
             xor rdi, rdi
             mov rdi, Pixel_size 
             call malloc
-            mov [p], rax                            ;save the pointer
-
-            ; Store values in the struct
-            mov bl, [red]
-            mov [rax + Pixel.red], bl               ; Store the value for red
-            mov bl, [green]
-            mov [rax + Pixel.green], bl             ; Store the value for green 
-            mov bl, [blue]
-            mov [rax + Pixel.blue], bl              ; Store the value for blue
-
-            mov bl, 0
-            mov [rax + Pixel.cdfValue], bl          ; Inital value for cdf value os 0
-
+            mov [node], rax                         ; node = malloc(new pixel)
+            
+            ; Read in red
+            mov rax, 0                          
+            mov edi, [fileDescriptor]               
+            lea rsi, [node + Pixel.red]                       
+            mov rdx, 1                            
+            syscall
+            ; Read in green
+            mov rax, 0                             
+            mov edi, [fileDescriptor]               
+            lea rsi, [node + Pixel.green]                        
+            mov rdx, 1                              
+            syscall
+            ; Read in blue
+            mov rax, 0                        
+            mov edi, [fileDescriptor]          
+            lea rsi, [node + Pixel.blue]                  
+            mov rdx, 1                      
+            syscall 
+            
             xor rbx, rbx
-            mov [rax + 8], rbx                        ; Store the null ptr for up 
-            mov [rax + 16], rbx                       ; Store the null ptr for down 
-            mov [rax + 24], rbx                       ; Store the null ptr for left
-            mov [rax + 32], rbx                       ; Store the null ptr for right 
+            mov [node + Pixel.cdfValue], bl 
 
+            mov [node + 8], rbx                        ; Store the null ptr for up 
+            mov [node + 16], rbx                       ; Store the null ptr for down 
+            mov [node + 24], rbx                       ; Store the null ptr for left
+            mov [node + 32], rbx                       ; Store the null ptr for right
+
+            xor rcx, rcx
             xor r14, r14
-            xor rcx,rcx 
-            xor rdi, rdi
+            mov r14d, [innerCounter]
+            mov ecx, [outerCounter]
+        
+            cmp r14, 0
+            jg .skip_1
+            mov rax, [node]
+            mov [rowHeads + rcx * 8], rax 
+            .skip_1:
+            xor rbx, rbx
+            mov rbx, [prev]
+            cmp rbx, 0
+            je .skip_2
+            xor r15,r15
+            mov r15, [node]
+            mov [prev + 32], r15
+            xor r15, r15
+            mov r15, [prev]
+            mov [node + 24], r15
+            .skip_2:
+            xor rbx, rbx
+            mov rbx, [prevRow]
+            cmp rbx, 0
+            je .skip_3
+            xor r15, r15
+            mov r15, [node]
+            mov [prevRow + 16], r15
+            xor r15, r15
+            mov r15, [prevRow]
+            mov [node + 8], r15
+            xor rbx, rbx
+            mov rbx, [prevRow + 32]
+            mov [prevRow], rbx
+            .skip_3:
+            xor rbx, rbx
+            mov rbx, [node]
+            mov [prev], rbx
+            inc r14
+            jmp .while_loop_2
+        .end_while_loop_2:
+        xor rbx, rbx
+        mov rbx, [rowHeads + rcx]
+        mov [prevRow], rbx
+        inc rcx
+        jmp .while_loop_1
+    .end_while_loop_1:
+    xor rbx, rbx
+    mov rbx, [rowHeads]
+    
+    ; Close file
+    mov rdi , [fileDescriptor]          ; Mov the file descriptor     
+    call close                          ; Close file
 
-            mov r14d, dword[innerCounter]           ; Load r14 from stack
-            mov ecx, dword[outerCounter]            ; Load rcx from stack
-
-            mov rbx, qword[list]
-            mov rdi, qword[list + rcx * 8]          ; Load list[row]
-            mov [rdi + r14 * 8], rax                ; Store ptr to pixel at list[row][col]
-
-            ; Create Refrences
-            cmp ecx, 0                              ; If row > 0
-            jle .no_up_ref
-
-            xor r12, r12
-            xor rsi, rsi
-            xor rdi, rdi
-            mov r12, rcx
-            dec r12
-
-            mov rdi, [list + r12 * 8]               ; list[row-1]
-            mov rsi, [rdi + r14 * 8]                ; list[row-1][col]
-            mov [rax + 8], rsi                      ; Store up pointer
-            .no_up_ref:
-
-            cmp ecx, 0                              ; If col > 0
-            jle .no_left_ref
-            
-            xor r12, r12
-            xor rdi, rdi
-            xor rsi, rsi
-            mov r12, r14
-            dec r12
-
-            mov rdi, [list + rcx * 8]               ; list[row]
-            mov rsi, [rdi + r12 * 8]                ; list[row][col-1]
-            mov [rax + 24], rsi                     ; Set left ptr             
-            .no_left_ref:
-
-            inc r14                                 ; Increment counter (inner loop)
-            jmp .loop_columns                       ; Repeate loop columns
-        .end_loop_columns:
-        inc rcx                                     ; Increment counter (outer loop)
-        jmp .loop_rows
-    .end_loop_rows:
-
-    ; Fill in the right and down references
-    xor rcx, rcx                                    ; Clear outer loop counter
-    .loop_ref_rows:
-        cmp ecx, [height]                      ; Check if in bounds
-        je .end_loop_ref_rows
-        xor r14, r14                                ; Clear inner loop counter
-        .loop_ref_columns:
-            xor rdx,rdx
-            mov edx, [width]
-            cmp r14, rdx                            ; Check if in bounds
-            je .end_loop_ref_columns
-            
-            ;mov rax, qword[list]                    ; Load the list
-            mov rbx, [list + rcx * 8]                ; Load list[row]
-            mov rdx, [rbx + r14 * 8]                ; Load list[row][col]
-
-            mov r10d, dword[width]
-            mov r11d, r10d 
-            dec r11d
-            cmp r14d, r11d 
-            je .no_right_link
-            mov rsi, [rbx + r14 * 8 + 8]            ; Load list[row][col+1]
-            mov [rdx + 32], rsi                     ; Set Right refrence
-            .no_right_link:
-            
-            mov r10d, dword[width]
-            mov r11d, r10d 
-            dec r11d
-            cmp ecx, r11d                     
-            je .no_down_link
-            mov rsi, [list + rcx * 8 + 8]            ; Load list[row+1]
-            mov [rdx + 16], rsi                     ; Set down pointer
-            .no_down_link:
-            
-            inc r14                                 ; Increment inner counter
-            jmp .loop_ref_columns
-        .end_loop_ref_columns:
-        inc rcx                                     ; Increment outer counter
-        jmp .loop_ref_rows
-    .end_loop_ref_rows:
-    ; Finished processing
+    mov rax, [rowHeads]
     leave
     ret

@@ -1,5 +1,5 @@
 # Variables
-ASM_SOURCES = create_pixel.asm task1_read_ppm_file.asm task2_compute_cdf_values.asm task3_histogram_equalisation.asm task4_write_ppm.asm
+ASM_SOURCES = task1_read_ppm_file.asm
 ASM_OBJECTS = $(ASM_SOURCES:.asm=.o)
 C_SOURCE = test.c
 C_OBJECT = test.o

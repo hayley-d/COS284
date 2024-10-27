@@ -1,39 +1,35 @@
-# Compiler and assembler settings
-CC=gcc
-ASM=yasm
-CFLAGS=-no-pie -Wall -g
-ASMFLAGS=-f elf64 -g dwarf2
+# Variables
+ASM_SOURCES = create_pixel.asm task1_read_ppm_file.asm task2_compute_cdf_values.asm task3_histogram_equalisation.asm task4_write_ppm.asm
+ASM_OBJECTS = $(ASM_SOURCES:.asm=.o)
+C_SOURCE = test.c
+C_OBJECT = test.o
+EXECUTABLE = program
 
-# Files
-C_SRC=main.c
-ASM_SRC=task1_pixel_struct.asm
-C_OBJ=main.o
-ASM_OBJ=task1_pixel_struct.o
-EXEC=program
+# Compiler and assembler flags
+ASM_FLAGS = -f elf64 -g dwarf2
+CFLAGS = -Wall -g -fPIE
+LDFLAGS = -no-pie
 
-# Default target, builds and runs the program
-run: $(EXEC)
-	./$(EXEC)
+# Default target
+all: $(EXECUTABLE)
 
-# Build only (compiles and links without running)
-build: $(EXEC)
+# Build executable
+$(EXECUTABLE): $(ASM_OBJECTS) $(C_OBJECT)
+	$(CC) $(LDFLAGS) -o $@ $^
 
-# Link the object files to create the executable
-$(EXEC): $(C_OBJ) $(ASM_OBJ)
-	$(CC) $(CFLAGS) -o $(EXEC) $(C_OBJ) $(ASM_OBJ)
+# Compile C source
+$(C_OBJECT): $(C_SOURCE)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile C file
-$(C_OBJ): $(C_SRC)
-	$(CC) $(CFLAGS) -c $(C_SRC) -o $(C_OBJ)
+# Assemble each .asm file
+%.o: %.asm
+	yasm $(ASM_FLAGS) -o $@ $<
 
-# Assemble the assembly file
-$(ASM_OBJ): $(ASM_SRC)
-	$(ASM) $(ASMFLAGS) $(ASM_SRC) -o $(ASM_OBJ)
+# Run the program
+run: $(EXECUTABLE)
+	./$(EXECUTABLE)
 
-# Clean up the object files and executable
+# Clean up
 clean:
-	rm -f $(C_OBJ) $(ASM_OBJ) $(EXEC)
-
-# Phony targets (targets not referring to files)
-.PHONY: run build clean
+	rm -f $(ASM_OBJECTS) $(C_OBJECT) $(EXECUTABLE)
 
